@@ -22,6 +22,7 @@ interface NavSidebarProps {
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/automations", label: "Automation Rules", icon: BarChart3 }, // Using BarChart3 temporarily or another icon
   { href: "/admin/upload", label: "Upload Leads", icon: Upload },
   { href: "/sales", label: "Sales", icon: Phone },
   { href: "/strategist", label: "Strategist", icon: Target },
@@ -52,10 +53,14 @@ export default function NavSidebar({ isOpen, onClose }: NavSidebarProps) {
         {/* Header */}
         <div className="flex h-16 items-center justify-between border-b border-[#1a1a1a] px-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#42CA80]">
-              <span className="text-sm font-bold text-black">FM</span>
+            <div className="flex h-8 items-center">
+              <img
+                src="/Logo.png"
+                alt="FortuneMarq"
+                className="h-8 w-auto object-contain"
+              />
             </div>
-            <span className="font-semibold text-white">Agency OS</span>
+            <span className="font-semibold text-white">FortuneMarq</span>
           </Link>
           <button
             onClick={onClose}
@@ -95,11 +100,9 @@ export default function NavSidebar({ isOpen, onClose }: NavSidebarProps) {
 
         {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 border-t border-[#1a1a1a] p-4">
-          <p className="text-xs text-[#666]">FortuneMarq Agency OS v1.0</p>
+          <p className="text-xs text-[#666]">FortuneMarq v1.0</p>
         </div>
       </aside>
     </>
   );
 }
-
-

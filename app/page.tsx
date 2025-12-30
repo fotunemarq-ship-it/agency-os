@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
-import { Loader2, Zap } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const [status, setStatus] = useState("Initializing...");
@@ -33,7 +33,7 @@ export default function Home() {
           .eq("id", user.id)
           .single();
 
-        let role = profile?.role;
+        let role = (profile as any)?.role;
 
         // If no role found in profiles, check if user is a client
         if (!role && user.email) {
@@ -57,7 +57,7 @@ export default function Home() {
         const roleRoutes: Record<string, string> = {
           admin: "/admin",
           telecaller: "/sales",
-          strategist: "/admin/strategy",
+          strategist: "/strategist",
           pm: "/projects",
           staff: "/staff",
           client: "/client/dashboard",
@@ -86,14 +86,13 @@ export default function Home() {
       {/* Loading Content */}
       <div className="relative flex flex-col items-center gap-6">
         {/* Logo */}
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#42CA80] to-emerald-600 shadow-lg shadow-[#42CA80]/25">
-          <Zap className="h-8 w-8 text-white" />
+        <div className="flex h-16 items-center justify-center">
+          <img
+            src="/Logo.png"
+            alt="FortuneMarq"
+            className="h-16 w-auto object-contain"
+          />
         </div>
-
-        {/* Brand */}
-        <h1 className="text-2xl font-bold tracking-tight text-white">
-          Agency <span className="text-[#42CA80]">OS</span>
-        </h1>
 
         {/* Loading Spinner */}
         <div className="flex items-center gap-3">

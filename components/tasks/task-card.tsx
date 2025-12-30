@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Clock, AlertCircle, ChevronDown, Circle, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase";
+import { logFullAction } from "@/lib/audit";
 import clsx from "clsx";
 
 interface Task {
@@ -93,13 +94,13 @@ export default function TaskCard({ task, onStatusChange }: TaskCardProps) {
     try {
       console.log("Creating Supabase client...");
       const supabase = createClient();
-      
+
       console.log("Sending update request...");
-      const { data, error } = await supabase
-        .from("tasks")
+      const updateQuery = (supabase.from("tasks") as any)
         .update({ status: newStatus })
         .eq("id", task.id)
         .select();
+      const { data, error } = await updateQuery;
 
       console.log("Response received:", { data, error });
 
@@ -118,6 +119,30 @@ export default function TaskCard({ task, onStatusChange }: TaskCardProps) {
       console.log("Task updated successfully:", data);
       alert(`✅ Task status updated to "${newStatus}"!`);
       onStatusChange();
+
+      // AUDIT: Task Status Change
+      await logFullAction(
+        {
+          entity_type: "task",
+          entity_id: task.id,
+          event_type: newStatus === "completed" ? "task_completed" : "status_changed",
+          title: newStatus === "completed"
+            ? "Task Completed"
+            : `Task updated: ${newStatus.replace("_", " ")}`,
+          body: `Task "${task.title}" status changed from ${task.status} to ${newStatus}`,
+          metadata: {
+            from_status: task.status,
+            to_status: newStatus,
+          },
+        },
+        {
+          entity_type: "task",
+          entity_id: task.id,
+          action: "UPDATE",
+          before_data: task as any,
+          after_data: { ...task, status: newStatus },
+        }
+      );
     } catch (error: any) {
       console.error("Catch block error:", error);
       alert(`Unexpected error: ${error.message || JSON.stringify(error)}`);

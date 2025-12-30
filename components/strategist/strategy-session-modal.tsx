@@ -135,19 +135,19 @@ export default function StrategySessionModal({
 
       // Update lead if there are updates
       if (Object.keys(updates).length > 0) {
-        const { error: leadError } = await supabase
-          .from("leads")
+        const leadUpdateQuery = (supabase.from("leads") as any)
           .update({
             ...updates,
             notes: lead.notes ? `${lead.notes}\n${fullNotes}` : fullNotes,
           })
           .eq("id", lead.id);
+        const { error: leadError } = await leadUpdateQuery;
 
         if (leadError) throw leadError;
       }
 
       // Log call activity
-      await supabase.from("call_activities").insert({
+      const activityQuery2 = (supabase.from("call_activities") as any).insert({
         lead_id: lead.id,
         outcome: activityOutcome,
         notes: fullNotes,

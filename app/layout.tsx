@@ -14,9 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FortuneMarq Agency OS",
+  title: "FortuneMarq",
   description: "CRM and Project Management tool for Digital Marketing Agency",
 };
+
+import { SessionHeartbeat } from "@/components/session-heartbeat";
 
 export default function RootLayout({
   children,
@@ -29,6 +31,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0f0f0f] text-white`}
         suppressHydrationWarning
       >
+        <SessionHeartbeat />
         <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>

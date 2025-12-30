@@ -122,10 +122,10 @@ export default function TaskExecutionModal({
         updateData.submission_notes = notes.trim();
       }
 
-      const { error } = await supabase
-        .from("tasks")
+      const updateQuery = (supabase.from("tasks") as any)
         .update(updateData)
         .eq("id", task.id);
+      const { error } = await updateQuery;
 
       if (error) throw error;
 

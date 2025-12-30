@@ -1,4 +1,5 @@
 import { createServerClient } from "@/lib/supabase";
+import Link from "next/link";
 import StrategistPipeline from "@/components/strategist/strategist-pipeline";
 
 export default async function StrategistDashboardPage() {
@@ -47,8 +48,18 @@ export default async function StrategistDashboardPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] px-4 py-6">
       <div className="mx-auto max-w-7xl">
-        <StrategistPipeline 
-          initialLeads={activeLeads || []} 
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-white">Strategist Dashboard</h1>
+          <Link
+            href="/strategist/deals"
+            className="px-4 py-2 bg-[#42CA80] text-black font-medium rounded-lg hover:bg-[#3ab872] transition-colors"
+          >
+            Manage All Deals
+          </Link>
+        </div>
+
+        <StrategistPipeline
+          initialLeads={activeLeads || []}
           closedWonLeads={closedWonLeads || []}
           closedLostLeads={closedLostLeads || []}
           callActivities={activities || []}

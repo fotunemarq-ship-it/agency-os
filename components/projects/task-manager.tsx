@@ -1,5 +1,7 @@
 "use client";
 
+import TaskModalContent from "./task-modal-content";
+import { checkTaskBlocked } from "@/lib/projects/task-logic";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -167,10 +169,10 @@ export default function TaskManager({
 
       if (editingTask) {
         // Update existing task
-        const { error } = await supabase
-          .from("tasks")
+        const updateQuery2 = (supabase.from("tasks") as any)
           .update(taskData)
           .eq("id", editingTask.id);
+        const { error } = await updateQuery2;
 
         if (error) throw error;
 
@@ -183,7 +185,7 @@ export default function TaskManager({
         // Create new task
         const { data, error } = await supabase
           .from("tasks")
-          .insert({ ...taskData, status: "not_started" })
+          .insert({ ...taskData, status: "not_started" } as any)
           .select()
           .single();
 
@@ -231,10 +233,10 @@ export default function TaskManager({
     const supabase = createClient();
 
     try {
-      const { error } = await supabase
-        .from("tasks")
+      const updateQuery = (supabase.from("tasks") as any)
         .update({ [field]: value })
         .eq("id", taskId);
+      const { error } = await updateQuery;
 
       if (error) throw error;
 
@@ -638,135 +640,29 @@ export default function TaskManager({
 
       {/* Add/Edit Task Modal */}
       {showTaskModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-4">
-          <div className="relative w-full max-w-lg overflow-hidden rounded-t-2xl border border-[#1a1a1a] bg-[#0f0f0f] shadow-2xl sm:rounded-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-[#1a1a1a] px-4 py-3 sm:px-6 sm:py-4">
-              <h2 className="text-base font-bold text-white sm:text-lg">
-                {editingTask ? "Edit Task" : "Add New Task"}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowTaskModal(false);
-                  resetForm();
-                }}
-                className="rounded-lg p-2 text-[#666] transition-colors hover:bg-[#1a1a1a] hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="max-h-[70vh] overflow-y-auto p-4 sm:p-6">
-              {/* Title */}
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium text-white">
-                  Task Title *
-                </label>
-                <input
-                  type="text"
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="Enter task title..."
-                  className="w-full rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] px-3 py-2.5 text-white placeholder-[#666] focus:border-[#42CA80]/50 focus:outline-none"
-                />
-              </div>
-
-              {/* Due Date & Priority Row */}
-              <div className="mb-4 grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-white">
-                    Due Date
-                  </label>
-                  <input
-                    type="date"
-                    value={formDueDate}
-                    onChange={(e) => setFormDueDate(e.target.value)}
-                    className="w-full rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] px-3 py-2.5 text-white focus:border-[#42CA80]/50 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-white">
-                    Priority
-                  </label>
-                  <select
-                    value={formPriority}
-                    onChange={(e) => setFormPriority(e.target.value)}
-                    className="w-full rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] px-3 py-2.5 text-white focus:border-[#42CA80]/50 focus:outline-none"
-                  >
-                    {PRIORITIES.map((p) => (
-                      <option key={p.value} value={p.value}>
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Assignee */}
-              <div className="mb-4">
-                <label className="mb-2 block text-sm font-medium text-white">
-                  Assignee
-                </label>
-                <select
-                  value={formAssignee}
-                  onChange={(e) => setFormAssignee(e.target.value)}
-                  className="w-full rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] px-3 py-2.5 text-white focus:border-[#42CA80]/50 focus:outline-none"
-                >
-                  {TEAM_MEMBERS.map((member) => (
-                    <option key={member} value={member}>
-                      {member}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* SOP Section */}
-              <div>
-                <label className="mb-2 flex items-center gap-2 text-sm font-medium text-white">
-                  <Book className="h-4 w-4 text-indigo-400" />
-                  SOP / Instructions
-                </label>
-                <textarea
-                  value={formSOP}
-                  onChange={(e) => setFormSOP(e.target.value)}
-                  placeholder="Paste task instructions, SOP link, or step-by-step guide..."
-                  className="h-32 w-full resize-none rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] px-3 py-2.5 text-sm text-white placeholder-[#666] focus:border-indigo-500/50 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex gap-3 border-t border-[#1a1a1a] bg-[#0a0a0a] px-4 py-3 sm:px-6 sm:py-4">
-              <button
-                onClick={() => {
-                  setShowTaskModal(false);
-                  resetForm();
-                }}
-                className="flex-1 rounded-lg border border-[#333] bg-[#1a1a1a] px-4 py-2.5 font-medium text-white transition-colors hover:bg-[#252525]"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveTask}
-                disabled={isSaving || !formTitle.trim()}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#42CA80] px-4 py-2.5 font-semibold text-black transition-colors hover:bg-[#3ab872] disabled:opacity-50"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : editingTask ? (
-                  "Save Changes"
-                ) : (
-                  "Add Task"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+        <TaskModalContent
+          task={editingTask as Task}
+          isNew={!editingTask}
+          onClose={() => {
+            setShowTaskModal(false);
+            resetForm();
+          }}
+          onSave={handleSaveTask}
+          isSaving={isSaving}
+          formTitle={formTitle}
+          setFormTitle={setFormTitle}
+          formDueDate={formDueDate}
+          setFormDueDate={setFormDueDate}
+          formAssignee={formAssignee}
+          setFormAssignee={setFormAssignee}
+          formPriority={formPriority}
+          setFormPriority={setFormPriority}
+          formSOP={formSOP}
+          setFormSOP={setFormSOP}
+          tasks={tasks}
+        />
       )}
+
 
       {/* SOP Viewer Modal */}
       {showSOPModal && selectedSOP && (

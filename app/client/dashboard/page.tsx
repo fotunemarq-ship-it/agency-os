@@ -80,7 +80,7 @@ export default function ClientDashboardPage() {
         const { data: clientData, error: clientError } = await supabase
           .from("clients")
           .select("*")
-          .eq("primary_email", user.email)
+          .eq("primary_email", user.email || "")
           .limit(1)
           .maybeSingle();
 
@@ -105,13 +105,13 @@ export default function ClientDashboardPage() {
         const { data: projectData, error: projectError } = await supabase
           .from("projects")
           .select("*")
-          .eq("client_id", clientData.id)
+          .eq("client_id", (clientData as any).id)
           .in("status", ["not_started", "in_progress"])
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
 
-        console.log("Project Search Result:", { projectData, projectError, clientId: clientData.id });
+        console.log("Project Search Result:", { projectData, projectError, clientId: (clientData as any).id });
 
         if (projectData) {
           setProject(projectData);
@@ -120,17 +120,17 @@ export default function ClientDashboardPage() {
           const { data: milestonesData } = await supabase
             .from("project_milestones")
             .select("*")
-            .eq("project_id", projectData.id)
+            .eq("project_id", (projectData as any).id)
             .order("order_index", { ascending: true });
 
           setMilestones(milestonesData || []);
 
           // Step 5: Get PM Profile if assigned
-          if (projectData.assigned_pm) {
+          if ((projectData as any).assigned_pm) {
             const { data: pmData } = await supabase
               .from("profiles")
               .select("id, full_name, email")
-              .eq("id", projectData.assigned_pm)
+              .eq("id", (projectData as any).assigned_pm)
               .single();
 
             setPmProfile(pmData);
@@ -211,7 +211,7 @@ export default function ClientDashboardPage() {
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#42CA80] to-emerald-600">
             <Building2 className="h-10 w-10 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Welcome to Agency OS</h1>
+          <h1 className="text-2xl font-bold text-white">Welcome to FortuneMarq</h1>
           <p className="mt-4 text-zinc-400">{error}</p>
           {userEmail && (
             <div className="mt-6 rounded-xl border border-zinc-800 bg-zinc-800/50 p-4">
@@ -249,7 +249,7 @@ export default function ClientDashboardPage() {
           </div>
           <h1 className="text-2xl font-bold text-white">Welcome, {client.business_name}</h1>
           <p className="mt-4 text-zinc-400">
-            You don't have any active projects at the moment. When a new project starts, you'll see your progress here.
+            You don&apos;t have any active projects at the moment. When a new project starts, you&apos;ll see your progress here.
           </p>
           <a
             href="mailto:support@fortunemarq.com"
@@ -465,7 +465,7 @@ export default function ClientDashboardPage() {
                     {pmProfile?.full_name || "Agency Team"}
                   </p>
                   <p className="text-sm text-zinc-500">
-                    {pmProfile ? "Project Manager" : "We're here to help"}
+                    {pmProfile ? "Project Manager" : "We&apos;re here to help"}
                   </p>
                 </div>
               </div>
@@ -507,7 +507,7 @@ export default function ClientDashboardPage() {
             <div className="rounded-2xl border border-[#42CA80]/30 bg-[#42CA80]/5 p-6">
               <h3 className="mb-2 font-semibold text-[#42CA80]">Need Help?</h3>
               <p className="text-sm text-zinc-400">
-                Have questions about your project? We're here to help.
+                Have questions about your project? We&apos;re here to help.
               </p>
               <a
                 href="mailto:support@fortunemarq.com"

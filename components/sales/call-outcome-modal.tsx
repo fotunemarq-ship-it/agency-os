@@ -124,13 +124,13 @@ export default function CallOutcomeModal({
       }
 
       // Update the lead
-      const { error: leadError } = await supabase
-        .from("leads")
+      const leadUpdateQuery = (supabase.from("leads") as any)
         .update({
           status: outcome.status,
           next_action_date: nextActionDate,
         })
         .eq("id", leadId);
+      const { error: leadError } = await leadUpdateQuery;
 
       if (leadError) throw leadError;
 
@@ -148,7 +148,8 @@ export default function CallOutcomeModal({
 
       // Try to insert call activity, but don't fail if table doesn't exist
       try {
-        await supabase.from("call_activities").insert(callActivityData);
+        const activityQuery = (supabase.from("call_activities") as any).insert(callActivityData);
+        await activityQuery;
       } catch (err) {
         // Silently fail if call_activities table doesn't exist
         console.warn("call_activities table may not exist:", err);

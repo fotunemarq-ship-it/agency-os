@@ -21,9 +21,9 @@ const COLORS = [
 ];
 
 const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "USD",
+    currency: "INR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
@@ -75,7 +75,7 @@ export default function RevenuePieChart({ data }: RevenuePieChartProps) {
     <ResponsiveContainer width="100%" height={300}>
       <PieChart>
         <Pie
-          data={data}
+          data={data as any}
           cx="50%"
           cy="50%"
           labelLine={false}

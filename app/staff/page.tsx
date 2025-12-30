@@ -1,16 +1,30 @@
-import { createServerClient } from "@/lib/supabase";
+import { createServerClientWithCookies } from "@/lib/supabase-server";
+import Link from "next/link";
 import StaffDashboard from "@/components/staff/staff-dashboard";
 
-// For development, use a placeholder staff name
-// In production, this would come from auth and filter by user ID
-const STAFF_NAME = "Sarah";
-
 export default async function StaffPage() {
-  const supabase = createServerClient();
+  const supabase = await createServerClientWithCookies();
+
+  // Get authenticated user
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Get placeholder name or real name
+  let staffName = "Staff Member";
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .single();
+    if ((profile as any)?.full_name) {
+      staffName = (profile as any).full_name;
+    } else if (user.email) {
+      staffName = user.email.split("@")[0];
+    }
+  }
 
   // Fetch all tasks with project and client info
-  // In production, filter by authenticated user's ID
-  // For now, fetch all tasks and show them (assigned_to is a text field with names)
+  // The RLS policies will filter what this user can actually see
   const { data: tasks, error } = await supabase
     .from("tasks")
     .select(`
@@ -44,7 +58,13 @@ export default async function StaffPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] px-4 py-6">
       <div className="mx-auto max-w-6xl">
-        <StaffDashboard tasks={staffTasks} staffName={STAFF_NAME} />
+        <div className="flex justify-end mb-4">
+          {/* Link to advanced Task Manager */}
+          <Link href="/tasks/list" className="text-sm text-[#42CA80] hover:underline">
+            Go to Advanced Task Manager &rarr;
+          </Link>
+        </div>
+        <StaffDashboard tasks={staffTasks} staffName={staffName} />
       </div>
     </div>
   );

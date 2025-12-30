@@ -9,251 +9,208 @@ import {
   Phone,
   FolderKanban,
   AlertTriangle,
+  Flame,
+  Coffee,
+  CheckSquare,
+  Activity
 } from "lucide-react";
 import Link from "next/link";
+import { generateDailySnapshot } from "@/lib/admin/kpi-logic";
 
 export default async function AdminCommandHub() {
   const supabase = createServerClient();
 
-  // Fetch summary data in parallel
-  const [dealsResult, leadsResult, callsResult, projectsResult, tasksResult] =
-    await Promise.all([
-      supabase.from("deals").select("id, deal_value, status"),
-      supabase.from("leads").select("id, status"),
-      supabase.from("call_activities").select("id, created_at"),
-      supabase.from("projects").select("id, status, deadline"),
-      supabase.from("tasks").select("id, status, due_date"),
-    ]);
+  // 1. Fetch Alerts
+  const { data: alerts } = await supabase
+    .from("alerts")
+    .select("*")
+    .eq("status", "open")
+    .order("created_at", { ascending: false });
 
-  const deals = dealsResult.data || [];
-  const leads = leadsResult.data || [];
-  const calls = callsResult.data || [];
-  const projects = projectsResult.data || [];
-  const tasks = tasksResult.data || [];
+  // 2. Fetch/Calculate KPIs
+  // In a real high-traffic app, we'd read from 'admin_kpi_snapshots' for today.
+  // If missing, generate. For simplicity and freshness, we calculate on load here since traffic is low.
+  const kpis: any = await generateDailySnapshot();
 
-  // Calculate summary metrics
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayStr = today.toISOString().split("T")[0];
+  const highAlerts = alerts?.filter((a: any) => a.severity === 'high') || [];
+  const otherAlerts = alerts?.filter((a: any) => a.severity !== 'high') || [];
 
-  // Financial metrics
-  const totalRevenue = deals
-    .filter((d: any) => d.status === "won" || d.status === "accepted")
-    .reduce((sum: number, d: any) => sum + (d.deal_value || 0), 0);
-
-  // Sales metrics
-  const totalLeads = leads.length;
-  const callsToday = calls.filter((c: any) => {
-    if (!c.created_at) return false;
-    return c.created_at.split("T")[0] === todayStr;
-  }).length;
-
-  // Strategy metrics
-  const closedWon = leads.filter((l: any) => l.status === "closed_won").length;
-  const closeRate = totalLeads > 0 ? (closedWon / totalLeads) * 100 : 0;
-
-  // Operations metrics
-  const activeProjects = projects.filter(
-    (p: any) => p.status === "in_progress" || p.status === "not_started"
-  ).length;
-  const overdueTasks = tasks.filter((t: any) => {
-    if (!t.due_date || t.status === "completed") return false;
-    return t.due_date < todayStr;
-  }).length;
-
-  const formatCurrency = (amount: number) => {
-    if (amount >= 1000000) {
-      return `$${(amount / 1000000).toFixed(1)}M`;
-    }
-    if (amount >= 1000) {
-      return `$${(amount / 1000).toFixed(0)}K`;
-    }
-    return `$${amount.toLocaleString()}`;
-  };
-
-  const commandCards = [
+  // Scorecard Config
+  const scorecards = [
     {
-      title: "Financial Health",
-      subtitle: "Revenue & profitability",
-      href: "/admin/financials",
-      icon: DollarSign,
-      color: "from-emerald-500 to-green-600",
-      bgGlow: "bg-emerald-500/20",
-      metrics: [
-        { label: "Total Revenue", value: formatCurrency(totalRevenue) },
-      ],
-    },
-    {
-      title: "Sales Force",
-      subtitle: "Lead generation & calls",
-      href: "/admin/sales",
+      title: "Sales Engine",
       icon: Phone,
-      color: "from-blue-500 to-cyan-600",
-      bgGlow: "bg-blue-500/20",
+      color: "text-blue-400",
+      bg: "bg-blue-500/10 border-blue-500/20",
+      href: "/admin/sales",
       metrics: [
-        { label: "Total Leads", value: totalLeads.toLocaleString() },
-        { label: "Calls Today", value: callsToday.toLocaleString() },
-      ],
+        { label: "New Inbound", value: kpis.inbound_new_today },
+        { label: "Calls Logged", value: kpis.calls_logged_today },
+        { label: "Connected", value: kpis.connected_today },
+        { label: "Follow-ups Due", value: kpis.followups_due_today, alert: kpis.followups_missed_today > 0 },
+      ]
     },
     {
-      title: "Strategy Engine",
-      subtitle: "Deal closing & conversions",
-      href: "/admin/strategy",
+      title: "Strategy Pipeline",
       icon: Target,
-      color: "from-purple-500 to-violet-600",
-      bgGlow: "bg-purple-500/20",
+      color: "text-purple-400",
+      bg: "bg-purple-500/10 border-purple-500/20",
+      href: "/admin/strategy",
       metrics: [
-        { label: "Close Rate", value: `${closeRate.toFixed(1)}%` },
-      ],
+        { label: "Sessions Booked", value: kpis.strategy_booked_today },
+        { label: "Deals Won (7d)", value: kpis.deals_won_7d },
+        { label: "Win Rate (30d)", value: `${kpis.win_rate_30d}%` },
+        { label: "Pipeline Value", value: `₹${(kpis.pipeline_value_open / 100000).toFixed(1)}L` },
+      ]
     },
     {
-      title: "Operations Center",
-      subtitle: "Project execution & tasks",
-      href: "/admin/operations",
+      title: "Delivery Ops",
       icon: Settings,
-      color: "from-orange-500 to-amber-600",
-      bgGlow: "bg-orange-500/20",
+      color: "text-orange-400",
+      bg: "bg-orange-500/10 border-orange-500/20",
+      href: "/admin/operations",
       metrics: [
-        { label: "Active Projects", value: activeProjects.toLocaleString() },
-        { label: "Overdue Tasks", value: overdueTasks.toLocaleString(), isAlert: overdueTasks > 0 },
-      ],
+        { label: "Active Projects", value: kpis.active_projects },
+        { label: "Tasks Due Today", value: kpis.tasks_due_today },
+        { label: "Overdue Tasks", value: kpis.tasks_overdue, alert: kpis.tasks_overdue > 20 },
+        { label: "Stalled Projects", value: kpis.stalled_projects, alert: kpis.stalled_projects > 0 },
+      ]
     },
+    {
+      title: "Client Health",
+      icon: Users,
+      color: "text-emerald-400",
+      bg: "bg-emerald-500/10 border-emerald-500/20",
+      href: "/admin/delivery", // or specific client page
+      metrics: [
+        { label: "Pending Approvals", value: kpis.approvals_pending },
+        { label: "Approvals Overdue", value: kpis.approvals_overdue, alert: kpis.approvals_overdue > 0 },
+        { label: "Change Requests", value: kpis.change_requests_open },
+      ]
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] px-4 py-6">
-      <div className="mx-auto max-w-6xl">
-        {/* Header */}
-        <div className="mb-10 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#42CA80] to-[#3ab872] shadow-lg shadow-[#42CA80]/20">
-            <FolderKanban className="h-8 w-8 text-white" />
+    <div className="min-h-screen bg-[#0f0f0f] px-4 py-8">
+      <div className="mx-auto max-w-7xl">
+
+        {/* Header & Briefing CTA */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+              <FolderKanban className="h-8 w-8 text-[#42CA80]" />
+              Command Hub
+            </h1>
+            <p className="text-[#a1a1aa] mt-1">Enterprise Operations Center</p>
           </div>
-          <h1 className="text-3xl font-bold text-white md:text-4xl">
-            Command Hub
-          </h1>
-          <p className="mt-2 text-[#a1a1aa]">
-            Executive summary of agency operations
-          </p>
+          <Link href="/admin/briefing" className="group flex items-center gap-3 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20">
+            <div className="p-1.5 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
+              <Coffee className="h-5 w-5" />
+            </div>
+            <div className="text-left">
+              <p className="text-[10px] uppercase font-bold tracking-wider opacity-80">Start Here</p>
+              <p className="text-sm font-bold">Daily Briefing</p>
+            </div>
+            <ArrowRight className="h-4 w-4 opacity-50 group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
 
-        {/* Command Cards Grid */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {commandCards.map((card) => {
+        {/* Alerts Panel */}
+        {highAlerts.length > 0 && (
+          <div className="mb-8 bg-red-950/20 border border-red-500/20 rounded-2xl p-4 animate-in slide-in-from-top-4">
+            <div className="flex items-center gap-2 mb-3 text-red-400 font-bold">
+              <Flame className="h-5 w-5" />
+              <span>Critical Alerts ({highAlerts.length})</span>
+            </div>
+            <div className="grid gap-2">
+              {highAlerts.map((alert: any) => (
+                <div key={alert.id} className="flex items-center justify-between bg-red-900/10 p-3 rounded-lg border border-red-500/10">
+                  <span className="text-red-200 text-sm font-medium">{alert.title}: {alert.body}</span>
+                  <Link href="/admin/alerts" className="text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 px-2 py-1 rounded transition-colors">Resolve</Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Scorecards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+          {scorecards.map((card) => {
             const Icon = card.icon;
             return (
-              <Link
-                key={card.href}
-                href={card.href}
-                className="group relative overflow-hidden rounded-2xl border border-[#1a1a1a] bg-gradient-to-br from-zinc-900 to-zinc-900/50 p-6 transition-all duration-300 hover:border-[#333] hover:shadow-xl"
-              >
-                {/* Background Glow */}
-                <div
-                  className={`absolute -right-10 -top-10 h-40 w-40 rounded-full ${card.bgGlow} blur-3xl opacity-30 transition-opacity group-hover:opacity-50`}
-                />
-
-                {/* Content */}
-                <div className="relative">
-                  {/* Icon & Title */}
-                  <div className="flex items-start justify-between">
-                    <div
-                      className={`flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br ${card.color} shadow-lg`}
-                    >
-                      <Icon className="h-7 w-7 text-white" />
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-[#a1a1aa] transition-colors group-hover:text-white">
-                      <span>View Details</span>
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </div>
+              <div key={card.title} className={`rounded-2xl p-5 border transition-all hover:bg-opacity-20 ${card.bg} flex flex-col h-full`}>
+                <div className="flex justify-between items-start mb-4">
+                  <div className={`p-2 rounded-lg bg-[#0f0f0f]/50 ${card.color}`}>
+                    <Icon className="h-5 w-5" />
                   </div>
-
-                  {/* Title */}
-                  <h2 className="mt-5 text-xl font-bold text-white">
-                    {card.title}
-                  </h2>
-                  <p className="mt-1 text-sm text-[#666]">{card.subtitle}</p>
-
-                  {/* Metrics */}
-                  <div className="mt-6 flex flex-wrap gap-6">
-                    {card.metrics.map((metric, idx) => (
-                      <div key={idx}>
-                        <p className="text-xs font-medium uppercase tracking-wider text-[#666]">
-                          {metric.label}
-                        </p>
-                        <p
-                          className={`mt-1 text-2xl font-bold ${
-                            metric.isAlert ? "text-red-400" : "text-white"
-                          }`}
-                        >
-                          {metric.isAlert && (
-                            <AlertTriangle className="mr-1 inline h-5 w-5" />
-                          )}
-                          {metric.value}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+                  <Link href={card.href} className="text-[#666] hover:text-white transition-colors">
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </div>
-
-                {/* Hover Border Effect */}
-                <div
-                  className={`absolute inset-0 rounded-2xl border-2 border-transparent bg-gradient-to-br ${card.color} opacity-0 transition-opacity group-hover:opacity-10`}
-                />
-              </Link>
+                <h3 className="text-lg font-bold text-white mb-4">{card.title}</h3>
+                <div className="space-y-4 flex-1">
+                  {card.metrics.map((metric, i) => (
+                    <div key={i} className="flex justify-between items-center">
+                      <span className="text-sm text-[#888]">{metric.label}</span>
+                      <span className={`font-mono font-medium ${metric.alert ? "text-red-400" : "text-zinc-200"}`}>
+                        {metric.value}
+                        {metric.alert && <AlertTriangle className="inline h-3 w-3 ml-1" />}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             );
           })}
         </div>
 
-        {/* Quick Stats Bar */}
-        <div className="mt-10 rounded-xl border border-[#1a1a1a] bg-zinc-900/50 p-4">
-          <div className="flex flex-wrap items-center justify-center gap-8 text-center">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-[#42CA80]" />
-              <span className="text-sm text-[#a1a1aa]">
-                <span className="font-semibold text-white">{deals.length}</span> Total Deals
-              </span>
+        {/* Secondary Alerts & Quick Links */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Recent System Alerts */}
+          <div className="lg:col-span-2 bg-[#1a1a1a] border border-[#252525] rounded-2xl p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Activity className="h-5 w-5 text-[#666]" /> System Monitory
+              </h2>
+              <Link href="/admin/alerts" className="text-sm text-indigo-400 hover:text-indigo-300">View All Alerts</Link>
             </div>
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-blue-400" />
-              <span className="text-sm text-[#a1a1aa]">
-                <span className="font-semibold text-white">{calls.length}</span> Calls Logged
-              </span>
+            <div className="space-y-3">
+              {otherAlerts.slice(0, 5).map((alert: any) => (
+                <div key={alert.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#222] transition-colors">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                  <div className="flex-1">
+                    <p className="text-sm text-zinc-300 font-medium">{alert.title}</p>
+                    <p className="text-xs text-[#666]">{alert.body}</p>
+                  </div>
+                  <span className="text-xs text-[#666]">{new Date(alert.created_at).toLocaleDateString()}</span>
+                </div>
+              ))}
+              {otherAlerts.length === 0 && <p className="text-sm text-[#666] italic">System operating normally. No warnings.</p>}
             </div>
-            <div className="flex items-center gap-2">
-              <FolderKanban className="h-5 w-5 text-purple-400" />
-              <span className="text-sm text-[#a1a1aa]">
-                <span className="font-semibold text-white">{projects.length}</span> Projects
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-orange-400" />
-              <span className="text-sm text-[#a1a1aa]">
-                <span className="font-semibold text-white">{tasks.length}</span> Tasks
-              </span>
+          </div>
+
+          {/* Admin Quick Actions */}
+          <div className="space-y-4">
+            <div className="bg-[#1a1a1a] border border-[#252525] rounded-2xl p-6">
+              <h3 className="text-sm font-bold text-[#666] uppercase tracking-wider mb-4">Quick Actions</h3>
+              <div className="space-y-2">
+                <Link href="/admin/upload" className="block w-full text-left p-3 rounded-lg bg-[#0f0f0f] border border-[#252525] text-sm text-zinc-300 hover:border-[#444] transition-colors">
+                  📂  Upload Leads CSV
+                </Link>
+                <Link href="/admin/duplicates" className="block w-full text-left p-3 rounded-lg bg-[#0f0f0f] border border-[#252525] text-sm text-zinc-300 hover:border-[#444] transition-colors">
+                  🧹  Clean Duplicates
+                </Link>
+                <Link href="/admin/automations" className="block w-full text-left p-3 rounded-lg bg-[#0f0f0f] border border-[#252525] text-sm text-zinc-300 hover:border-[#444] transition-colors">
+                  ⚡️  Configure Automations
+                </Link>
+                <Link href="/admin/users" className="block w-full text-left p-3 rounded-lg bg-[#0f0f0f] border border-[#252525] text-sm text-zinc-300 hover:border-[#444] transition-colors">
+                  👥  Manage Users
+                </Link>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Navigation Links */}
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/admin/upload"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#1a1a1a] px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-[#252525]"
-          >
-            Upload Leads
-          </Link>
-          <Link
-            href="/projects"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#1a1a1a] px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-[#252525]"
-          >
-            All Projects
-          </Link>
-          <Link
-            href="/tasks"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#1a1a1a] px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-[#252525]"
-          >
-            Task Board
-          </Link>
-        </div>
       </div>
     </div>
   );

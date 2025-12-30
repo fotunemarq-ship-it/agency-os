@@ -24,6 +24,8 @@ export interface Database {
           import_batch_id: string | null
           next_action_date: string | null
           notes: string | null
+          has_website: boolean | null
+          website_link: string | null
           created_at: string
         }
         Insert: {
@@ -40,6 +42,8 @@ export interface Database {
           import_batch_id?: string | null
           next_action_date?: string | null
           notes?: string | null
+          has_website?: boolean | null
+          website_link?: string | null
           created_at?: string
         }
         Update: {
@@ -56,6 +60,8 @@ export interface Database {
           import_batch_id?: string | null
           next_action_date?: string | null
           notes?: string | null
+          has_website?: boolean | null
+          website_link?: string | null
           created_at?: string
         }
       }
@@ -68,6 +74,8 @@ export interface Database {
           market_difficulty: string | null
           top_competitors: Json | null
           pitch_angle: string | null
+          general_insights: Json | null
+          competitor_insights: Json | null
           created_at: string
         }
         Insert: {
@@ -78,6 +86,8 @@ export interface Database {
           market_difficulty?: string | null
           top_competitors?: Json | null
           pitch_angle?: string | null
+          general_insights?: Json | null
+          competitor_insights?: Json | null
           created_at?: string
         }
         Update: {
@@ -88,10 +98,52 @@ export interface Database {
           market_difficulty?: string | null
           top_competitors?: Json | null
           pitch_angle?: string | null
+          general_insights?: Json | null
+          competitor_insights?: Json | null
           created_at?: string
+        }
+      }
+      csv_uploads: {
+        Row: {
+          id: string
+          filename: string
+          uploaded_by: string | null
+          leads_count: number
+          industry: string | null
+          city: string | null
+          lead_type: string | null
+          source: string | null
+          has_market_data: boolean | null
+          created_at: string
+          import_batch_id: string | null
+        }
+        Insert: {
+          id?: string
+          filename: string
+          uploaded_by?: string | null
+          leads_count?: number
+          industry?: string | null
+          city?: string | null
+          lead_type?: string | null
+          source?: string | null
+          has_market_data?: boolean | null
+          created_at?: string
+          import_batch_id?: string | null
+        }
+        Update: {
+          id?: string
+          filename?: string
+          uploaded_by?: string | null
+          leads_count?: number
+          industry?: string | null
+          city?: string | null
+          lead_type?: string | null
+          source?: string | null
+          has_market_data?: boolean | null
+          created_at?: string
+          import_batch_id?: string | null
         }
       }
     }
   }
 }
-

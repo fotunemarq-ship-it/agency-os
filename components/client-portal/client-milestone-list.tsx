@@ -63,10 +63,11 @@ export default function ClientMilestoneList({
     try {
       const supabase = createClient();
 
-      const { error } = await supabase
-        .from("project_milestones")
+      const query = (supabase
+        .from("project_milestones") as any)
         .update({ status: "approved" })
         .eq("id", milestoneId);
+      const { error } = await query;
 
       if (error) {
         console.error("Error approving milestone:", error);

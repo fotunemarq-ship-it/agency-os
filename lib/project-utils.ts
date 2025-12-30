@@ -66,9 +66,8 @@ export async function generateProjectTasks(
     });
 
     // Insert all tasks
-    const { error: tasksError } = await supabaseClient
-      .from("tasks")
-      .insert(tasksToInsert);
+    const tasksInsertQuery = (supabaseClient.from("tasks") as any).insert(tasksToInsert);
+    const { error: tasksError } = await tasksInsertQuery;
 
     if (tasksError) {
       // If tasks table doesn't exist or RLS blocks it, gracefully skip
@@ -131,9 +130,8 @@ export async function generateProjectMilestones(
     }));
 
     // Insert all milestones
-    const { error: milestonesError } = await supabaseClient
-      .from("project_milestones")
-      .insert(milestonesToInsert);
+    const milestonesInsertQuery = (supabaseClient.from("project_milestones") as any).insert(milestonesToInsert);
+    const { error: milestonesError } = await milestonesInsertQuery;
 
     if (milestonesError) {
       // If project_milestones table doesn't exist or RLS blocks it, gracefully skip

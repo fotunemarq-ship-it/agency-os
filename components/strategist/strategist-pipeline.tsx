@@ -229,10 +229,10 @@ export default function StrategistPipeline({
     setIsUpdating(leadId);
     try {
       const supabase = createClient();
-      const { error } = await supabase
-        .from("leads")
+      const updateQuery = (supabase.from("leads") as any)
         .update({ status: "strategy_booked" })
         .eq("id", leadId);
+      const { error } = await updateQuery;
 
       if (error) throw error;
 
@@ -295,10 +295,10 @@ export default function StrategistPipeline({
     setIsUpdating(leadId);
     try {
       const supabase = createClient();
-      const { error } = await supabase
-        .from("leads")
+      const updateQuery2 = (supabase.from("leads") as any)
         .update({ status: "closed_lost" })
         .eq("id", leadId);
+      const { error } = await updateQuery2;
 
       if (error) throw error;
 

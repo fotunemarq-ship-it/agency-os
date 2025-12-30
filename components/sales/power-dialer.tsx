@@ -127,10 +127,10 @@ export default function PowerDialer({ initialLeads, userId }: PowerDialerProps) 
         updateData.next_action_date = nextActionDate;
       }
 
-      const { error: leadError } = await supabase
-        .from("leads")
+      const leadUpdateQuery = (supabase.from("leads") as any)
         .update(updateData)
         .eq("id", currentLead.id);
+      const { error: leadError } = await leadUpdateQuery;
 
       if (leadError) {
         console.error("Error updating lead:", leadError);
@@ -140,13 +140,14 @@ export default function PowerDialer({ initialLeads, userId }: PowerDialerProps) 
       }
 
       // Log call activity
-      const { error: activityError } = await supabase.from("call_activities").insert({
+      const activityInsertQuery = (supabase.from("call_activities") as any).insert({
         lead_id: currentLead.id,
         created_by: userId,
         outcome: newStatus,
         notes: note || null,
         created_at: now.toISOString(),
       });
+      const { error: activityError } = await activityInsertQuery;
 
       if (activityError) {
         console.warn("Could not log call activity:", activityError);

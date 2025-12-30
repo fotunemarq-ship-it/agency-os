@@ -13,7 +13,6 @@ import {
   Users,
   ListTodo,
   LogOut,
-  Zap,
   Menu,
   X,
   Loader2,
@@ -98,9 +97,9 @@ export default function AppSidebar() {
           .eq("id", user.id)
           .single();
 
-        let userRole = profile?.role;
-        let name = profile?.full_name || "User";
-        let email = profile?.email || user.email || "";
+        let userRole = (profile as any)?.role;
+        let name = (profile as any)?.full_name || "User";
+        let email = (profile as any)?.email || user.email || "";
 
         // If no role found in profiles, check if user is a client
         if (!userRole && user.email) {
@@ -112,8 +111,8 @@ export default function AppSidebar() {
           
           if (client) {
             userRole = "client";
-            name = client.business_name || "Client";
-            email = client.primary_email || user.email;
+            name = (client as any).business_name || "Client";
+            email = (client as any).primary_email || user.email;
           }
         }
 
@@ -148,11 +147,15 @@ export default function AppSidebar() {
   const MobileHeader = () => (
     <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-950/95 px-4 backdrop-blur-sm md:hidden">
       <Link href="/" className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#42CA80] to-emerald-600">
-          <Zap className="h-4 w-4 text-white" />
+        <div className="flex h-8 items-center">
+          <img
+            src="/Logo.png"
+            alt="FortuneMarq"
+            className="h-8 w-auto object-contain"
+          />
         </div>
         <span className="text-base font-bold text-white">
-          Agency<span className="text-[#42CA80]">OS</span>
+          FortuneMarq
         </span>
       </Link>
       <button
@@ -171,11 +174,15 @@ export default function AppSidebar() {
       {/* Sidebar Header / Logo */}
       <div className="flex h-16 items-center justify-between border-b border-zinc-800 px-4">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#42CA80] to-emerald-600 shadow-lg shadow-[#42CA80]/20">
-            <Zap className="h-5 w-5 text-white" />
+          <div className="flex h-10 items-center">
+            <img
+              src="/Logo.png"
+              alt="FortuneMarq"
+              className="h-10 w-auto object-contain"
+            />
           </div>
           <span className="text-lg font-bold text-white">
-            Agency<span className="text-[#42CA80]">OS</span>
+            FortuneMarq
           </span>
         </Link>
         {/* Close button - Mobile only */}

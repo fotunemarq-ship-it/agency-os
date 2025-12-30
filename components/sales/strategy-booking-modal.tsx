@@ -7,8 +7,8 @@ import clsx from "clsx";
 interface StrategyBookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (dateTime: string, topic: string) => Promise<void>;
-  leadName: string;
+  onBookingConfirm: (dateTime: string, topic: string) => Promise<void>;
+  leadName?: string;
 }
 
 const TIME_SLOTS = [
@@ -42,7 +42,7 @@ function formatTime(time: string): string {
 export default function StrategyBookingModal({
   isOpen,
   onClose,
-  onConfirm,
+  onBookingConfirm,
   leadName,
 }: StrategyBookingModalProps) {
   const [selectedDate, setSelectedDate] = useState("");
@@ -67,7 +67,7 @@ export default function StrategyBookingModal({
 
     try {
       const dateTime = `${selectedDate}T${selectedTime}:00`;
-      await onConfirm(dateTime, topic);
+      await onBookingConfirm(dateTime, topic);
       handleClose();
     } catch (err) {
       setError("Failed to book session. Please try again.");

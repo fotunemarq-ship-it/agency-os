@@ -46,7 +46,7 @@ export default function LeadStatusChart({ data }: LeadStatusChartProps) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <BarChart
-        data={data}
+        data={data as any}
         layout="vertical"
         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
       >

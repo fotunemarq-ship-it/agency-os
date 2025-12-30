@@ -21,9 +21,9 @@ interface MonthlyRevenueChartProps {
 
 const formatCurrency = (value: number) => {
   if (value >= 1000) {
-    return `$${(value / 1000).toFixed(0)}K`;
+    return `₹${(value / 1000).toFixed(0)}K`;
   }
-  return `$${value}`;
+  return `₹${value}`;
 };
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -32,7 +32,7 @@ const CustomTooltip = ({ active, payload }: any) => {
       <div className="rounded-lg border border-[#1a1a1a] bg-[#0f0f0f] px-3 py-2 shadow-xl">
         <p className="font-medium text-white">{payload[0].payload.fullName}</p>
         <p className="text-sm text-emerald-400">
-          ${payload[0].value.toLocaleString()}
+          ₹{payload[0].value.toLocaleString()}
         </p>
       </div>
     );
@@ -51,7 +51,7 @@ export default function MonthlyRevenueChart({ data }: MonthlyRevenueChartProps) 
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+      <BarChart data={data as any} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
         <XAxis
           dataKey="name"
           stroke="#a1a1aa"

@@ -92,13 +92,13 @@ export default async function SalesPage() {
     .filter((item) => item.value > 0);
 
   // Call Outcomes Funnel
-  const connectedCalls = calls.filter((c) => 
+  const connectedCalls = calls.filter((c) =>
     c.outcome && !["no_answer", "not_reachable", "busy"].includes(c.outcome)
   ).length;
-  const interestedCalls = calls.filter((c) => 
+  const interestedCalls = calls.filter((c) =>
     c.outcome && ["interested", "qualified", "strategy_booked"].includes(c.outcome)
   ).length;
-  const sessionsBooked = calls.filter((c) => 
+  const sessionsBooked = calls.filter((c) =>
     c.outcome === "strategy_booked"
   ).length;
 
@@ -149,25 +149,33 @@ export default async function SalesPage() {
     <div className="min-h-screen bg-[#0f0f0f] px-4 py-6">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="mb-8">
-          <Link
-            href="/admin"
-            className="mb-4 inline-flex items-center gap-2 text-sm text-[#a1a1aa] transition-colors hover:text-[#42CA80]"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Command Hub
-          </Link>
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-lg shadow-blue-500/20">
-              <Phone className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white md:text-3xl">
-                Sales Force
-              </h1>
-              <p className="text-sm text-[#a1a1aa]">Telecaller performance & lead generation</p>
+        <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <Link
+              href="/admin"
+              className="mb-4 inline-flex items-center gap-2 text-sm text-[#a1a1aa] transition-colors hover:text-[#42CA80]"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Command Hub
+            </Link>
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-lg shadow-blue-500/20">
+                <Phone className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white md:text-3xl">
+                  Sales Force
+                </h1>
+                <p className="text-sm text-[#a1a1aa]">Telecaller performance & lead generation</p>
+              </div>
             </div>
           </div>
+          <Link
+            href="/admin/sales/leads"
+            className="rounded-lg bg-[#42CA80] px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-[#3ab872]"
+          >
+            Manage Leads
+          </Link>
         </div>
 
         {/* KPI Cards */}
@@ -315,15 +323,14 @@ export default async function SalesPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div
-                            className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${
-                              index === 0
+                            className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${index === 0
                                 ? "bg-gradient-to-br from-amber-400 to-yellow-500"
                                 : index === 1
-                                ? "bg-gradient-to-br from-gray-300 to-gray-400"
-                                : index === 2
-                                ? "bg-gradient-to-br from-amber-600 to-amber-700"
-                                : "bg-[#1a1a1a]"
-                            }`}
+                                  ? "bg-gradient-to-br from-gray-300 to-gray-400"
+                                  : index === 2
+                                    ? "bg-gradient-to-br from-amber-600 to-amber-700"
+                                    : "bg-[#1a1a1a]"
+                              }`}
                           >
                             {index + 1}
                           </div>

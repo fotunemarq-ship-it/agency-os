@@ -22,7 +22,16 @@ export default function AppShell({ children }: AppShellProps) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <span className="ml-3 font-semibold text-white">Agency OS</span>
+        <div className="ml-3 flex items-center gap-2">
+          <div className="flex h-8 items-center">
+            <img
+              src="/Logo.png"
+              alt="FortuneMarq"
+              className="h-8 w-auto object-contain"
+            />
+          </div>
+          <span className="font-semibold text-white">FortuneMarq</span>
+        </div>
       </header>
 
       {/* Sidebar */}
@@ -33,6 +42,3 @@ export default function AppShell({ children }: AppShellProps) {
     </div>
   );
 }
-
-
-

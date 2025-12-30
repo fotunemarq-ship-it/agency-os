@@ -37,10 +37,10 @@ export default function ProjectTaskList({
       const newStatus =
         currentStatus === "completed" ? "not_started" : "completed";
 
-      const { error } = await supabase
-        .from("tasks")
+      const updateQuery = (supabase.from("tasks") as any)
         .update({ status: newStatus })
         .eq("id", taskId);
+      const { error } = await updateQuery;
 
       if (error) throw error;
 

@@ -34,7 +34,7 @@ export default function TeamLoadChart({ data }: TeamLoadChartProps) {
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 60 }}>
+        <BarChart data={data as any} margin={{ top: 5, right: 30, left: 20, bottom: 60 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" vertical={false} />
           <XAxis
             dataKey="name"

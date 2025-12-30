@@ -71,7 +71,7 @@ export default async function FinancialsPage() {
   const pieChartData = Object.entries(revenueByService)
     .map(([name, value]) => ({
       name: formatServiceType(name),
-      value,
+      value: value as number,
     }))
     .sort((a, b) => b.value - a.value);
 
@@ -96,7 +96,7 @@ export default async function FinancialsPage() {
   const revenueBySourceData = Object.entries(revenueBySource)
     .map(([name, value]) => ({
       name,
-      value,
+      value: value as number,
       color: sourceColors[name] || "#6B7280",
     }))
     .sort((a, b) => b.value - a.value);
@@ -146,9 +146,9 @@ export default async function FinancialsPage() {
   }
 
   function formatCurrency(amount: number) {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);

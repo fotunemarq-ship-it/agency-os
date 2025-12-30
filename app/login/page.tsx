@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
-import { Loader2, Lock, Mail, Zap, AlertCircle } from "lucide-react";
+import { Loader2, Lock, Mail, AlertCircle } from "lucide-react";
 import clsx from "clsx";
+import FortuneMarqLogo from "@/components/ui/fortune-marq-logo";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,28 +16,8 @@ export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  // Check if user is already logged in
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          // User is already logged in, redirect based on role
-          await redirectBasedOnRole(user.id);
-        }
-      } catch (err) {
-        console.error("Auth check error:", err);
-      } finally {
-        setIsCheckingAuth(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
   // Get user role and redirect to appropriate dashboard
-  const redirectBasedOnRole = async (userId: string) => {
+  const redirectBasedOnRole = useCallback(async (userId: string) => {
     try {
       // First, try to get role from profiles table
       const { data: profile } = await supabase
@@ -45,7 +26,7 @@ export default function LoginPage() {
         .eq("id", userId)
         .single();
 
-      let role = profile?.role;
+      let role = (profile as any)?.role;
 
       // If no role found in profiles, check if user is a client
       if (!role) {
@@ -71,7 +52,7 @@ export default function LoginPage() {
       const roleRoutes: Record<string, string> = {
         admin: "/admin",
         telecaller: "/sales",
-        strategist: "/admin/strategy",
+        strategist: "/strategist",
         pm: "/projects",
         staff: "/staff",
         client: "/client/dashboard",
@@ -83,7 +64,27 @@ export default function LoginPage() {
       console.error("Role fetch error:", err);
       router.push("/staff");
     }
-  };
+  }, [supabase, router]);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // User is already logged in, redirect based on role
+          await redirectBasedOnRole(user.id);
+        }
+      } catch (err) {
+        console.error("Auth check error:", err);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [supabase, redirectBasedOnRole]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,14 +148,9 @@ export default function LoginPage() {
         
         <div className="relative rounded-2xl border border-[#1a1a1a] bg-[#0f0f0f]/90 p-8 shadow-2xl backdrop-blur-sm sm:p-10">
           {/* Logo & Branding */}
-          <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#42CA80] to-emerald-600 shadow-lg shadow-[#42CA80]/25">
-              <Zap className="h-7 w-7 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">
-              Agency <span className="text-[#42CA80]">OS</span>
-            </h1>
-            <p className="mt-2 text-sm text-[#666]">
+          <div className="mb-8 flex flex-col items-center text-center">
+            <FortuneMarqLogo size="lg" showText={false} />
+            <p className="mt-4 text-sm text-[#666]">
               Sign in to your workspace
             </p>
           </div>
@@ -251,7 +247,7 @@ export default function LoginPage() {
 
         {/* Bottom text */}
         <p className="mt-6 text-center text-xs text-[#444]">
-          © {new Date().getFullYear()} FortuneMarq Agency OS. All rights reserved.
+          © {new Date().getFullYear()} FortuneMarq. All rights reserved.
         </p>
       </div>
     </div>

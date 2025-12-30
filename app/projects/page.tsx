@@ -1,8 +1,8 @@
-import { createServerClient } from "@/lib/supabase";
+import { createServerClientWithCookies } from "@/lib/supabase-server";
 import PMDashboard from "@/components/projects/pm-dashboard";
 
 export default async function ProjectsPage() {
-  const supabase = createServerClient();
+  const supabase = await createServerClientWithCookies();
 
   // Fetch all projects with client relationship
   const { data: projects, error: projectsError } = await supabase
@@ -25,15 +25,15 @@ export default async function ProjectsPage() {
 
   // If projects don't have client_id, try to get it from deals
   const projectsWithoutClients = projects?.filter((p: any) => !p.client_id && p.deal_id) || [];
-  let dealsMap = new Map();
-  
+  const dealsMap = new Map();
+
   if (projectsWithoutClients.length > 0) {
     const dealIds = projectsWithoutClients.map((p: any) => p.deal_id);
     const { data: deals } = await supabase
       .from("deals")
       .select("id, client_id")
       .in("id", dealIds);
-    
+
     if (deals) {
       deals.forEach((deal: any) => {
         if (deal.client_id) {
@@ -45,14 +45,14 @@ export default async function ProjectsPage() {
 
   // Fetch clients for deals that have client_id
   const clientIdsFromDeals = Array.from(dealsMap.values());
-  let clientsFromDealsMap = new Map();
-  
+  const clientsFromDealsMap = new Map();
+
   if (clientIdsFromDeals.length > 0) {
     const { data: clientsFromDeals } = await supabase
       .from("clients")
       .select("id, business_name, primary_email")
       .in("id", clientIdsFromDeals);
-    
+
     if (clientsFromDeals) {
       clientsFromDeals.forEach((client: any) => {
         clientsFromDealsMap.set(client.id, client);
@@ -76,14 +76,14 @@ export default async function ProjectsPage() {
   // Enrich projects with clients from deals if needed
   const enrichedProjects = (projects || []).map((project: any) => {
     let client = project.clients;
-    
+
     if (!client && project.deal_id) {
       const clientIdFromDeal = dealsMap.get(project.deal_id);
       if (clientIdFromDeal) {
         client = clientsFromDealsMap.get(clientIdFromDeal) || null;
       }
     }
-    
+
     return {
       ...project,
       clients: client,
@@ -103,9 +103,9 @@ export default async function ProjectsPage() {
           </div>
         )}
 
-        <PMDashboard 
-          projects={enrichedProjects} 
-          tasks={tasks || []} 
+        <PMDashboard
+          projects={enrichedProjects}
+          tasks={tasks || []}
         />
       </div>
     </div>

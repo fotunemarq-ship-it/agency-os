@@ -22,14 +22,14 @@ export default async function ClientPortalPage({ params }: ClientPortalPageProps
     .single();
 
   // Fetch client if client_id exists
-  let clientData = null;
-  if (project?.client_id) {
+  let clientData: { id: string; business_name: string | null; primary_email: string | null } | null = null;
+  if (project && (project as any).client_id) {
     const { data: client } = await supabase
       .from("clients")
       .select("id, business_name, primary_email")
-      .eq("id", project.client_id)
+      .eq("id", (project as any).client_id)
       .single();
-    clientData = client;
+    clientData = client as { id: string; business_name: string | null; primary_email: string | null } | null;
   }
 
   // Fetch milestones ordered by order_index
@@ -112,7 +112,7 @@ export default async function ClientPortalPage({ params }: ClientPortalPageProps
               {clientName}
             </h1>
             <p className="mt-2 text-[#a1a1aa]">
-              {formatServiceType(project.service_type || "")}
+              {formatServiceType((project as any).service_type || "")}
             </p>
           </div>
         </div>
@@ -125,7 +125,7 @@ export default async function ClientPortalPage({ params }: ClientPortalPageProps
                 Status
               </p>
               <p className="mt-1 font-semibold capitalize text-white">
-                {project.status?.replace("_", " ") || "Not Started"}
+                {(project as any).status?.replace("_", " ") || "Not Started"}
               </p>
             </div>
             <div>
@@ -133,7 +133,7 @@ export default async function ClientPortalPage({ params }: ClientPortalPageProps
                 Start Date
               </p>
               <p className="mt-1 font-semibold text-white">
-                {formatDate(project.start_date)}
+                {formatDate((project as any).start_date)}
               </p>
             </div>
             <div className="col-span-2 md:col-span-1">
@@ -141,7 +141,7 @@ export default async function ClientPortalPage({ params }: ClientPortalPageProps
                 Deadline
               </p>
               <p className="mt-1 font-semibold text-white">
-                {formatDate(project.deadline)}
+                {formatDate((project as any).deadline)}
               </p>
             </div>
           </div>

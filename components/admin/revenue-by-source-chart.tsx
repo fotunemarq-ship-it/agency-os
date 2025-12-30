@@ -12,7 +12,7 @@ const CustomTooltip = ({ active, payload }: any) => {
       <div className="rounded-lg border border-[#1a1a1a] bg-[#0f0f0f] p-3 shadow-xl">
         <p className="text-sm font-medium text-white">{payload[0].payload.name}</p>
         <p className="text-lg font-bold text-emerald-400">
-          ${payload[0].value.toLocaleString()}
+          ₹{payload[0].value.toLocaleString()}
         </p>
       </div>
     );
@@ -32,14 +32,14 @@ export default function RevenueBySourceChart({ data }: RevenueBySourceChartProps
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <BarChart data={data as any} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" horizontal={false} />
           <XAxis
             type="number"
             tick={{ fill: "#a1a1aa", fontSize: 12 }}
             axisLine={{ stroke: "#1a1a1a" }}
             tickLine={{ stroke: "#1a1a1a" }}
-            tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+            tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
           />
           <YAxis
             type="category"

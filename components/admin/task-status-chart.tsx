@@ -46,7 +46,7 @@ export default function TaskStatusChart({ data }: TaskStatusChartProps) {
   return (
     <ResponsiveContainer width="100%" height={250}>
       <BarChart
-        data={data}
+        data={data as any}
         margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
       >
         <XAxis

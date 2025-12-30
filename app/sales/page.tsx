@@ -1,6 +1,8 @@
 import { createServerClient } from "@/lib/supabase";
-import SalesIntelligenceCockpit from "@/components/sales/sales-intelligence-cockpit";
-import { Zap } from "lucide-react";
+import SalesPageClient from "./sales-page-client";
+
+// Revalidate this page every 30 seconds to show fresh leads
+export const revalidate = 30;
 
 export default async function SalesPage() {
   const supabase = createServerClient();
@@ -11,8 +13,7 @@ export default async function SalesPage() {
       .from("leads")
       .select("*")
       .not("status", "eq", "closed_won")
-      .not("status", "eq", "closed_lost")
-      .order("created_at", { ascending: false }),
+      .not("status", "eq", "closed_lost"),
     supabase.from("market_insights").select("*"),
     supabase.auth.getUser(),
   ]);
@@ -44,7 +45,16 @@ export default async function SalesPage() {
     notes: lead.notes,
     next_action_date: lead.next_action_date,
     created_at: lead.created_at,
+    lead_type: lead.lead_type || "outbound",
+    source: lead.source || null,
+    has_website: lead.has_website,
+    website_link: lead.website_link,
   }));
+
+  // Calculate new inbound leads count
+  const newInboundCount = processedLeads.filter(
+    (l) => l.lead_type === "inbound" && (l.status === "new" || !l.status)
+  ).length;
 
   // Transform market insights
   const processedMarketInsights = marketInsights.map((mi: any) => ({
@@ -58,36 +68,11 @@ export default async function SalesPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f]">
-      {/* Header */}
-      <div className="border-b border-[#1a1a1a] bg-[#0a0a0a] px-4 py-3 sm:px-6 sm:py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#42CA80] to-[#3ab872] shadow-lg shadow-[#42CA80]/20">
-              <Zap className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-white sm:text-xl">Sales Intelligence</h1>
-              <p className="text-xs text-[#666]">Data-Driven Selling</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="hidden rounded-full bg-[#1a1a1a] px-3 py-1 text-xs text-[#a1a1aa] sm:inline-flex">
-              {processedLeads.length} leads in queue
-            </span>
-            <span className="rounded-full bg-[#42CA80]/20 px-3 py-1 text-xs font-medium text-[#42CA80]">
-              {processedMarketInsights.length} markets analyzed
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Sales Intelligence Cockpit */}
-      <SalesIntelligenceCockpit
-        initialLeads={processedLeads}
-        initialMarketInsights={processedMarketInsights}
-        userId={user?.id || null}
-      />
-    </div>
+    <SalesPageClient
+      initialLeads={processedLeads}
+      initialMarketInsights={processedMarketInsights}
+      userId={user?.id || null}
+      newInboundCount={newInboundCount}
+    />
   );
 }

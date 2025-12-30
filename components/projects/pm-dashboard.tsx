@@ -216,13 +216,22 @@ export default function PMDashboard({ projects, tasks }: PMDashboardProps) {
   return (
     <>
       {/* Header */}
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl font-bold text-white sm:text-2xl md:text-3xl">
-          Projects Dashboard
-        </h1>
-        <p className="mt-1 text-xs text-[#a1a1aa] sm:text-sm">
-          Manage all active projects and team workload
-        </p>
+      <div className="mb-4 sm:mb-6 flex justify-between items-start">
+        <div>
+          <h1 className="text-xl font-bold text-white sm:text-2xl md:text-3xl">
+            Projects Dashboard
+          </h1>
+          <p className="mt-1 text-xs text-[#a1a1aa] sm:text-sm">
+            Manage all active projects and team workload
+          </p>
+        </div>
+        <Link
+          href="/projects/list"
+          className="flex items-center gap-2 px-4 py-2 bg-[#252525] text-white text-sm font-medium rounded-lg hover:bg-[#333] transition-colors"
+        >
+          <ListTodo className="h-4 w-4" />
+          <span className="hidden sm:inline">List View</span>
+        </Link>
       </div>
 
       {/* Team Pulse - Key Metrics */}
@@ -338,8 +347,8 @@ export default function PMDashboard({ projects, tasks }: PMDashboardProps) {
                           data.nextDeadline && isOverdue(data.nextDeadline)
                             ? "font-medium text-red-400"
                             : data.nextDeadline && isToday(data.nextDeadline)
-                            ? "font-medium text-amber-400"
-                            : "text-[#a1a1aa]"
+                              ? "font-medium text-amber-400"
+                              : "text-[#a1a1aa]"
                         )}>
                           {data.nextDeadline
                             ? formatDisplayDate(data.nextDeadline)
@@ -372,8 +381,8 @@ export default function PMDashboard({ projects, tasks }: PMDashboardProps) {
                     ? "bg-red-500 text-white"
                     : "bg-white text-black"
                   : isNeedsAttention && count > 0
-                  ? "bg-red-500/20 text-red-400 active:bg-red-500/30"
-                  : "bg-[#1a1a1a] text-[#a1a1aa] active:bg-[#252525]"
+                    ? "bg-red-500/20 text-red-400 active:bg-red-500/30"
+                    : "bg-[#1a1a1a] text-[#a1a1aa] active:bg-[#252525]"
               )}
             >
               {filter.label}
@@ -383,8 +392,8 @@ export default function PMDashboard({ projects, tasks }: PMDashboardProps) {
                   isActive
                     ? "bg-black/20 text-inherit"
                     : isNeedsAttention && count > 0
-                    ? "bg-red-500/30 text-red-300"
-                    : "bg-[#333] text-[#a1a1aa]"
+                      ? "bg-red-500/30 text-red-300"
+                      : "bg-[#333] text-[#a1a1aa]"
                 )}>
                   {count}
                 </span>
@@ -456,8 +465,8 @@ export default function PMDashboard({ projects, tasks }: PMDashboardProps) {
                         project.progress === 100
                           ? "bg-blue-500"
                           : project.needsAttention
-                          ? "bg-red-500"
-                          : "bg-[#42CA80]"
+                            ? "bg-red-500"
+                            : "bg-[#42CA80]"
                       )}
                       style={{ width: `${project.progress}%` }}
                     />
