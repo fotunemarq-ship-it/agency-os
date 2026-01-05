@@ -70,6 +70,24 @@ const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor:
     textColor: "text-amber-400",
     icon: FileText,
   },
+  proposal_requested: {
+    label: "Proposal Req",
+    bgColor: "bg-blue-500/20",
+    textColor: "text-blue-400",
+    icon: FileText,
+  },
+  proposal_sent: {
+    label: "Proposal Sent",
+    bgColor: "bg-orange-500/20",
+    textColor: "text-orange-400",
+    icon: Send,
+  },
+  contract_signed: {
+    label: "Contract Signed",
+    bgColor: "bg-green-500/20",
+    textColor: "text-green-400",
+    icon: FileSignature,
+  },
 };
 
 // Group leads by status for the pipeline view
@@ -77,6 +95,9 @@ const PIPELINE_STAGES = [
   { key: "qualified", title: "Qualified" },
   { key: "strategy_booked", title: "Sessions" },
   { key: "strategy_completed", title: "Closing" },
+  { key: "proposal_requested", title: "Proposal Req" },
+  { key: "proposal_sent", title: "Proposals" },
+  { key: "contract_signed", title: "Contracts" },
 ];
 
 function formatDate(date: Date): string {
@@ -120,7 +141,7 @@ export default function StrategistPipeline({
     // Count proposals and contracts from notes
     const proposalsSent = callActivities.filter(a => a.outcome === "proposal_sent").length;
     const contractsSent = callActivities.filter(a => a.outcome === "contract_sent").length;
-    
+
     // Leads needing proposals (strategy_booked without proposal sent)
     const leadsWithProposals = new Set(
       callActivities
@@ -146,9 +167,9 @@ export default function StrategistPipeline({
     callActivities
       .filter(a => a.outcome === "closed_lost")
       .forEach(a => {
-        const reason = a.notes?.match(/\[REASON: ([^\]]+)\]/)?.[1] || 
-                      a.notes?.split(" ").slice(0, 3).join(" ") || 
-                      "Not specified";
+        const reason = a.notes?.match(/\[REASON: ([^\]]+)\]/)?.[1] ||
+          a.notes?.split(" ").slice(0, 3).join(" ") ||
+          "Not specified";
         lossReasons[reason] = (lossReasons[reason] || 0) + 1;
       });
 
@@ -175,7 +196,7 @@ export default function StrategistPipeline({
   // Get follow-ups needed today
   const followUpsToday = useMemo(() => {
     const today = formatDate(new Date());
-    
+
     const followUpLeadIds = new Set<string>();
     const followUpReasons: Record<string, string[]> = {};
 
@@ -312,6 +333,31 @@ export default function StrategistPipeline({
     }
   };
 
+  const updateLeadStatus = async (leadId: string, newStatus: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setIsUpdating(leadId);
+    try {
+      const supabase = createClient();
+      const { error } = await (supabase.from("leads") as any)
+        .update({ status: newStatus })
+        .eq("id", leadId);
+
+      if (error) throw error;
+
+      setLeads(
+        leads.map((lead) =>
+          lead.id === leadId ? { ...lead, status: newStatus as any } : lead
+        )
+      );
+      router.refresh();
+    } catch (error: any) {
+      console.error(`Error updating status to ${newStatus}:`, error);
+      alert("Failed to update status. Please try again.");
+    } finally {
+      setIsUpdating(null);
+    }
+  };
+
   // Group leads by status
   const leadsByStatus = PIPELINE_STAGES.reduce((acc, stage) => {
     acc[stage.key] = leads.filter((lead) => lead.status === stage.key);
@@ -319,8 +365,8 @@ export default function StrategistPipeline({
   }, {} as Record<string, Lead[]>);
 
   // Get filtered leads for mobile view
-  const filteredLeads = activeStage === "all" 
-    ? leads 
+  const filteredLeads = activeStage === "all"
+    ? leads
     : leads.filter((lead) => lead.status === activeStage);
 
   const totalLeads = leads.length;
@@ -357,7 +403,7 @@ export default function StrategistPipeline({
         className={clsx(
           "cursor-pointer rounded-xl border border-[#1a1a1a] bg-[#1a1a1a] p-4 transition-all active:scale-[0.98]",
           ["strategy_booked", "strategy_completed"].includes(lead.status || "") &&
-            "hover:border-indigo-500/50"
+          "hover:border-indigo-500/50"
         )}
       >
         <div className="flex items-start justify-between gap-3">
@@ -445,6 +491,53 @@ export default function StrategistPipeline({
             >
               <CheckCircle className="h-4 w-4" />
               Close Deal
+            </button>
+          )}
+
+          {stage.key === "strategy_completed" && (
+            <button
+              onClick={(e) => updateLeadStatus(lead.id, "proposal_requested", e)}
+              disabled={isUpdating === lead.id}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-600/10 border border-blue-600 px-3 py-2.5 text-sm font-medium text-blue-400 transition-colors active:bg-blue-600/20 disabled:opacity-50"
+            >
+              <FileText className="h-4 w-4" />
+              Req Prop
+            </button>
+          )}
+
+          {stage.key === "proposal_requested" && (
+            <button
+              onClick={(e) => updateLeadStatus(lead.id, "proposal_sent", e)}
+              disabled={isUpdating === lead.id}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-orange-600/10 border border-orange-600 px-3 py-2.5 text-sm font-medium text-orange-400 transition-colors active:bg-orange-600/20 disabled:opacity-50"
+            >
+              <Send className="h-4 w-4" />
+              Sent
+            </button>
+          )}
+
+          {stage.key === "proposal_sent" && (
+            <button
+              onClick={(e) => updateLeadStatus(lead.id, "contract_signed", e)}
+              disabled={isUpdating === lead.id}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-green-600/10 border border-green-600 px-3 py-2.5 text-sm font-medium text-green-400 transition-colors active:bg-green-600/20 disabled:opacity-50"
+            >
+              <FileSignature className="h-4 w-4" />
+              Signed
+            </button>
+          )}
+
+          {stage.key === "contract_signed" && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCloseDeal(lead);
+              }}
+              disabled={isUpdating === lead.id}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#42CA80] px-3 py-2.5 text-sm font-semibold text-black transition-colors active:bg-[#3ab872] disabled:opacity-50"
+            >
+              <Trophy className="h-4 w-4" />
+              Won
             </button>
           )}
 
